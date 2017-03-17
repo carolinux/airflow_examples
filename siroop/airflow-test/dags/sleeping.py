@@ -71,7 +71,7 @@ flaky_task_that_works_some_of_the_time = PythonOperator(
     retry_delay=timedelta(seconds=5),
     python_callable=maybe_raise_exception,
     #on_failure_callback=send_email,
-    retries=3,
+    retries=1,
     params={"foo":"bar"},
     dag=dag)
 
@@ -81,6 +81,7 @@ final_task = PythonOperator(
     retry_delay=timedelta(seconds=5),
     python_callable=run_final_task,
     retries=3,
+    trigger_rule="all_done",
     dag=dag)
 
 final_task.set_upstream(flaky_task_that_works_some_of_the_time)
