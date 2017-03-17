@@ -28,7 +28,7 @@ def run_successful_task(**context):
     logging.info("I am inside the plain python operation")
     logging.info("My context is {}".format(context))
     logging.info("Pushing a val thru xcom")
-    context['ti'].xcom_push(key='my_val', value=42)
+    return 42 # this value we want to get after
 
 
 
@@ -41,9 +41,9 @@ def maybe_raise_exception(**context):
 def run_final_task(**context):
     '''This is a function that will run within the DAG execution'''
     time.sleep(1)
-    context['ti'].xcom_push(key='my_val', value=42)
     logging.info("I am teh final task")
-    val = context['ti'].xcom_pull(key="my_val", task_ids="task_that_suceeds")
+    val = context['ti'].xcom_pull(task_ids="task_that_succeeds")
+    assert(val==42)
     logging.info("Value read from previous task via xcom: {}".format(val))
     
 
