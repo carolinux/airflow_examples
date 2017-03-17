@@ -15,6 +15,7 @@ seven_days_ago = datetime(2017,3,8,16,14,0)
 args = {
     'owner': 'airflow',
     'start_date': seven_days_ago,
+    'email': "carolinegr@gmail.com"
 }
 
 dag = DAG(
@@ -61,7 +62,7 @@ flaky_task_that_works_some_of_the_time = PythonOperator(
     provide_context=True,
     retry_delay=timedelta(seconds=5),
     python_callable=maybe_raise_exception,
-    #on_failure_callback=send_email,
+    email_on_failure=True,
     retries=1,
     params={"foo":"bar"},
     dag=dag)
