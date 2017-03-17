@@ -7,8 +7,10 @@ from datetime import datetime, timedelta
 
 import time
 from pprint import pprint
+import logging
+import random
 
-seven_days_ago = datetime(2017,3,10,16,14,0)
+seven_days_ago = datetime(2017,3,8,16,14,0)
 
 args = {
     'owner': 'airflow',
@@ -23,11 +25,10 @@ dag = DAG(
 def custom_print(**context):
     '''This is a function that will run within the DAG execution'''
     time.sleep(1)
-    import logging
     logging.info("I am inside the plain python operation")
     logging.info("My context is {}".format(context))
     logging.info("Env var value available before starting up sched/server is {}".format(os.environ["AIRFLOW_HOME"]))
-    logging.info("Env var value available after starting up sched/server is {}".format(os.environ["FOO"]))
+    #logging.info("Env var value available after starting up sched/server is {}".format(os.environ["FOO"]))
 
 def raise_exception(**context):
     time.sleep(10)
@@ -36,14 +37,18 @@ def raise_exception(**context):
 
 def maybe_raise_exception(**context):
     time.sleep(10)
-    import random
     val = random.randint(1,2)
     if val==1:
         raise Exception("aaa")
+
+def run_final_task(**context):
+    '''This is a function that will run within the DAG execution'''
+    time.sleep(1)
+    logging.info("I am teh final task")
     
 
 
-successful_task = PythonOperator(
+succesful_task = PythonOperator(
     task_id='task_that_succeeds',
     provide_context=True,
     python_callable=custom_print,
@@ -69,3 +74,14 @@ flaky_task_that_works_some_of_the_time = PythonOperator(
     retries=3,
     params={"foo":"bar"},
     dag=dag)
+
+final_task = PythonOperator(
+    task_id='final_task',
+    provide_context=True,
+    retry_delay=timedelta(seconds=5),
+    python_callable=run_final_task,
+    retries=3,
+    dag=dag)
+
+final_task.set_upstream(flaky_task_that_works_some_of_the_time)
+final_task.set_upstream(succesful_task)
